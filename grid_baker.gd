@@ -10,14 +10,20 @@ extends Node3D
 var button1 = bake_grid
 
 func bake_grid():
+	tiles_count.clear()
+	var error_count = 0
 	if gridmap == null or parent_node == null:
 		print ("Assign gridmap and parent node")
 		return
 
 	for id in gridmap.mesh_library.get_item_list():
 			tiles_count.set(gridmap.mesh_library.get_item_name(id), 0)
+	await get_tree().physics_frame
 	if parent_node.get_child_count() != 0:
 		for mesh: MeshInstance3D in parent_node.get_children():
+			if mesh.name.begins_with("@MeshInstance3D"):
+				error_count = error_count + 1
+				continue
 			var base_name = mesh.name
 			var clear_name = base_name.left(base_name.rfind("_"))
 			tiles_count[clear_name] += 1
@@ -58,7 +64,8 @@ func bake_grid():
 			collision_instance.shape = collision_shape
 			static_instance.add_child(collision_instance)
 			collision_instance.owner = static_instance.get_tree().edited_scene_root
-
+			
+		
 	gridmap.clear()
 	notify_property_list_changed()
-	print("GridMap meshes baking complete, GridMap cleared")
+	print("GridMap meshes baking complete, GridMap cleared, there were ", error_count, " name errors!")
